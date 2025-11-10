@@ -87,8 +87,15 @@ echo -e "${YELLOW}[4/7] Создаём нового пользователя...$
 echo -e "${BLUE}Важно: Этот пользователь будет иметь sudo-права${NC}"
 echo ""
 
+# Установка adduser, если отсутствует
+if ! command -v adduser &> /dev/null; then
+    echo -e "${YELLOW}Устанавливаю adduser...${NC}"
+    apt install -y adduser
+fi
+
+# Чтение имени пользователя через /dev/tty
 while true; do
-    read -p "Введите имя нового пользователя: " USERNAME
+    read -p "Введите имя нового пользователя: " USERNAME < /dev/tty
     
     if [ -z "$USERNAME" ]; then
         echo -e "${RED}Имя не может быть пустым. Попробуйте снова.${NC}"
@@ -103,10 +110,14 @@ while true; do
     break
 done
 
-adduser --gecos "" $USERNAME
-usermod -aG sudo $USERNAME
+# Создание пользователя
+adduser --gecos "" "$USERNAME" < /dev/tty
 
-if groups $USERNAME | grep -q '\bsudo\b'; then
+# Добавление в группу sudo
+usermod -aG sudo "$USERNAME"
+
+# Проверка
+if groups "$USERNAME" | grep -q '\bsudo\b'; then
     echo -e "${GREEN}[OK] Пользователь '$USERNAME' создан и добавлен в группу sudo${NC}"
 else
     echo -e "${RED}[ОШИБКА] Пользователь '$USERNAME' НЕ добавлен в группу sudo!${NC}"
@@ -114,16 +125,6 @@ else
 fi
 echo ""
 
-# ==============================================================================
-# Шаг 5: Отключение root-входа по паролю
-# ==============================================================================
-echo -e "${YELLOW}[5/7] Отключаем вход root по паролю...${NC}"
-cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
-sed -i 's/^PermitRootLogin yes/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
-sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
-systemctl restart sshd
-echo -e "${GREEN}[OK] Root-вход по паролю отключён${NC}"
-echo ""
 
 # ==============================================================================
 # Шаг 6: Настройка SSH-ключей (опционально)
