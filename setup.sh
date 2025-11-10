@@ -52,7 +52,7 @@ echo ""
 # ==============================================================================
 # Шаг 1: Обновление системы
 # ==============================================================================
-echo -e "${YELLOW}[1/7] Обновляем систему...${NC}"
+echo -e "${YELLOW}[1/6] Обновляем систему...${NC}"
 apt update -y
 apt upgrade -y
 echo -e "${GREEN}[OK] Система обновлена${NC}"
@@ -61,7 +61,7 @@ echo ""
 # ==============================================================================
 # Шаг 2: Установка базовых пакетов
 # ==============================================================================
-echo -e "${YELLOW}[2/7] Устанавливаем базовые пакеты (ufw, curl, wget, git, sudo, adduser)...${NC}"
+echo -e "${YELLOW}[2/6] Устанавливаем базовые пакеты (ufw, curl, wget, git, sudo, adduser)...${NC}"
 apt install -y ufw curl wget git sudo adduser
 echo -e "${GREEN}[OK] Пакеты установлены${NC}"
 echo ""
@@ -69,7 +69,7 @@ echo ""
 # ==============================================================================
 # Шаг 3: Настройка firewall (UFW)
 # ==============================================================================
-echo -e "${YELLOW}[3/7] Настраиваем firewall (UFW)...${NC}"
+echo -e "${YELLOW}[3/6] Настраиваем firewall (UFW)...${NC}"
 ufw --force reset
 ufw default deny incoming
 ufw default allow outgoing
@@ -83,7 +83,7 @@ echo ""
 # ==============================================================================
 # Шаг 4: Создание нового пользователя
 # ==============================================================================
-echo -e "${YELLOW}[4/7] Создаём нового пользователя...${NC}"
+echo -e "${YELLOW}[4/6] Создаём нового пользователя...${NC}"
 echo -e "${BLUE}Важно: Этот пользователь будет иметь sudo-права${NC}"
 echo ""
 
@@ -93,7 +93,7 @@ if ! getent group sudo > /dev/null; then
     groupadd sudo
 fi
 
-# Настройка sudoers (только если строка отсутствует)
+# Настройка sudoers
 if ! grep -q "^%sudo" /etc/sudoers; then
     echo -e "${YELLOW}Настраиваю sudoers...${NC}"
     echo "%sudo   ALL=(ALL:ALL) ALL" >> /etc/sudoers
@@ -134,15 +134,13 @@ echo ""
 # ==============================================================================
 # Шаг 5: Отключение root-входа по паролю
 # ==============================================================================
-echo -e "${YELLOW}[5/7] Отключаем вход root по паролю...${NC}"
+echo -e "${YELLOW}[5/6] Отключаем вход root по паролю...${NC}"
 
-# Проверка наличия sshd_config
 if [ -f /etc/ssh/sshd_config ]; then
     cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
     sed -i 's/^PermitRootLogin yes/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
     sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
     
-    # Перезапуск SSH (только если служба существует)
     if systemctl is-active --quiet sshd || systemctl is-active --quiet ssh; then
         systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null
         echo -e "${GREEN}[OK] Root-вход по паролю отключён${NC}"
@@ -155,34 +153,9 @@ fi
 echo ""
 
 # ==============================================================================
-# Шаг 6: Настройка SSH-ключей (опционально)
+# Шаг 6: Финальное обновление
 # ==============================================================================
-echo -e "${YELLOW}[6/7] Настройка SSH-ключей (опционально)${NC}"
-read -p "Хотите настроить SSH-ключи? (y/n): " SETUP_SSH < /dev/tty
-
-if [[ "$SETUP_SSH" =~ ^[Yy]$ ]]; then
-    mkdir -p /home/$USERNAME/.ssh
-    echo -e "${BLUE}Вставьте ваш публичный SSH-ключ:${NC}"
-    read -r SSH_KEY < /dev/tty
-    
-    if [ -z "$SSH_KEY" ]; then
-        echo -e "${RED}[ПРОПУЩЕНО] SSH-ключ не введён${NC}"
-    else
-        echo "$SSH_KEY" >> /home/$USERNAME/.ssh/authorized_keys
-        chmod 700 /home/$USERNAME/.ssh
-        chmod 600 /home/$USERNAME/.ssh/authorized_keys
-        chown -R $USERNAME:$USERNAME /home/$USERNAME/.ssh
-        echo -e "${GREEN}[OK] SSH-ключ добавлен${NC}"
-    fi
-else
-    echo -e "${BLUE}[ПРОПУЩЕНО] SSH-ключи не настроены${NC}"
-fi
-echo ""
-
-# ==============================================================================
-# Шаг 7: Финальное обновление
-# ==============================================================================
-echo -e "${YELLOW}[7/7] Финальное обновление...${NC}"
+echo -e "${YELLOW}[6/6] Финальное обновление...${NC}"
 apt update -y
 echo -e "${GREEN}[OK] Обновление завершено${NC}"
 echo ""
