@@ -2,7 +2,7 @@
 
 # ==============================================================================
 # Скрипт первичной настройки Ubuntu-сервера для X-ray
-# GitHub: https://github.com/твой-username/xray-server-setup
+# GitHub: https://github.com/Umalanif/xray-server-setup
 # ==============================================================================
 
 # Цвета для вывода
@@ -61,8 +61,8 @@ echo ""
 # ==============================================================================
 # Шаг 2: Установка базовых пакетов
 # ==============================================================================
-echo -e "${YELLOW}[2/7] Устанавливаем базовые пакеты (ufw, curl, wget, git)...${NC}"
-apt install -y ufw curl wget git
+echo -e "${YELLOW}[2/7] Устанавливаем базовые пакеты (ufw, curl, wget, git, sudo, adduser)...${NC}"
+apt install -y ufw curl wget git sudo adduser
 echo -e "${GREEN}[OK] Пакеты установлены${NC}"
 echo ""
 
@@ -87,13 +87,19 @@ echo -e "${YELLOW}[4/7] Создаём нового пользователя...$
 echo -e "${BLUE}Важно: Этот пользователь будет иметь sudo-права${NC}"
 echo ""
 
-# Установка adduser, если отсутствует
-if ! command -v adduser &> /dev/null; then
-    echo -e "${YELLOW}Устанавливаю adduser...${NC}"
-    apt install -y adduser
+# Создание группы sudo, если не существует
+if ! getent group sudo > /dev/null; then
+    echo -e "${YELLOW}Создаю группу sudo...${NC}"
+    groupadd sudo
 fi
 
-# Чтение имени пользователя через /dev/tty
+# Настройка sudoers (только если строка отсутствует)
+if ! grep -q "^%sudo" /etc/sudoers; then
+    echo -e "${YELLOW}Настраиваю sudoers...${NC}"
+    echo "%sudo   ALL=(ALL:ALL) ALL" >> /etc/sudoers
+fi
+
+# Чтение имени пользователя
 while true; do
     read -p "Введите имя нового пользователя: " USERNAME < /dev/tty
     
@@ -125,17 +131,39 @@ else
 fi
 echo ""
 
+# ==============================================================================
+# Шаг 5: Отключение root-входа по паролю
+# ==============================================================================
+echo -e "${YELLOW}[5/7] Отключаем вход root по паролю...${NC}"
+
+# Проверка наличия sshd_config
+if [ -f /etc/ssh/sshd_config ]; then
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.backup
+    sed -i 's/^PermitRootLogin yes/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+    sed -i 's/^#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+    
+    # Перезапуск SSH (только если служба существует)
+    if systemctl is-active --quiet sshd || systemctl is-active --quiet ssh; then
+        systemctl restart sshd 2>/dev/null || systemctl restart ssh 2>/dev/null
+        echo -e "${GREEN}[OK] Root-вход по паролю отключён${NC}"
+    else
+        echo -e "${YELLOW}[ПРЕДУПРЕЖДЕНИЕ] SSH-сервер не запущен (нормально для Docker)${NC}"
+    fi
+else
+    echo -e "${YELLOW}[ПРОПУЩЕНО] SSH-конфигурация не найдена (нормально для Docker)${NC}"
+fi
+echo ""
 
 # ==============================================================================
 # Шаг 6: Настройка SSH-ключей (опционально)
 # ==============================================================================
 echo -e "${YELLOW}[6/7] Настройка SSH-ключей (опционально)${NC}"
-read -p "Хотите настроить SSH-ключи? (y/n): " SETUP_SSH
+read -p "Хотите настроить SSH-ключи? (y/n): " SETUP_SSH < /dev/tty
 
 if [[ "$SETUP_SSH" =~ ^[Yy]$ ]]; then
     mkdir -p /home/$USERNAME/.ssh
     echo -e "${BLUE}Вставьте ваш публичный SSH-ключ:${NC}"
-    read -r SSH_KEY
+    read -r SSH_KEY < /dev/tty
     
     if [ -z "$SSH_KEY" ]; then
         echo -e "${RED}[ПРОПУЩЕНО] SSH-ключ не введён${NC}"
