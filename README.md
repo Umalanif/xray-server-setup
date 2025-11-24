@@ -3,6 +3,7 @@
 Автоматизированная установка X-ray сервера с **VLESS + Reality + Vision** на Ubuntu 22/24.
 
 ## 📋 Что нужно:
+
 - VPS с Ubuntu 22 или 24
 - 5-10 минут времени
 - Минимальные требования: 1 CPU, 1 GB RAM, 10 GB диска
@@ -19,8 +20,8 @@
 
 wget -qO- https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/setup.sh | bash
 
-
 **Что произойдёт:**
+
 - Обновление системы
 - Настройка firewall (порты: 22, 80, 443)
 - Создание нового пользователя с sudo-правами
@@ -28,16 +29,14 @@ wget -qO- https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/setu
 
 **⚠️ ВАЖНО:** Не закрывай терминал! Сначала протестируй нового пользователя:
 
-su - твоё_имя_пользователя
+su - твоё*имя*пользователя
 sudo whoami # Должно вывести "root"
-
 
 ---
 
 ### Шаг 2: Смена DNS на Cloudflare (рекомендуется)
 
 wget -qO- https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/change-dns.sh | sudo bash
-
 
 **Зачем:** Cloudflare DNS быстрее и не блокирует Tor/некоторые сайты.
 
@@ -47,8 +46,8 @@ wget -qO- https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/chan
 
 wget -qO- https://raw.githubusercontent.com/ServerTechnologies/simple-xray-core/refs/heads/main/xray-install | sudo bash
 
-
 **Что произойдёт:**
+
 - Установка X-ray ядра с VLESS + Reality + Vision
 - Автоматическая настройка
 - Вывод QR-кода для подключения
@@ -95,7 +94,6 @@ sharelink
 
 cat help
 
-
 ---
 
 ## 📊 Что используется:
@@ -113,16 +111,13 @@ cat help
 
 sudo systemctl status xray
 
-
 ### Перезапустить X-ray:
 
 sudo systemctl restart xray
 
-
 ### Посмотреть логи:
 
 sudo journalctl -u xray -f
-
 
 ---
 
@@ -130,5 +125,15 @@ sudo journalctl -u xray -f
 
 - [X-ray Project](https://github.com/XTLS/Xray-core)
 - [ServerTechnologies](https://github.com/ServerTechnologies/simple-xray-core)
+
+## 🚑 Проблемы с подключением? (Смена маскировки)
+
+Если ваш провайдер блокирует соединение (или включил "белые списки"), попробуйте сменить маскировку трафика (SNI) на популярные российские сервисы.
+
+**Запустите эту команду на сервере:**
+sudo bash <(curl -Ls https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/change_sni.sh
+)
+
+Скрипт предложит выбрать домен (VK, Ozon, Wildberries и др.) и автоматически перенастроить сервер.
 
 ---
