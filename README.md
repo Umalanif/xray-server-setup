@@ -166,9 +166,7 @@ sudo journalctl -u xray -f
 
 **Запустите эту команду на сервере:**
 
-wget -O change_sni.sh https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/change_sni.sh
-
-sudo bash change_sni.sh
+wget -O change_sni.sh https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/change_sni.sh && sudo bash change_sni.sh
 
 Скрипт предложит выбрать домен (VK, Ozon, Wildberries и др.) и автоматически перенастроить сервер.
 
@@ -178,9 +176,7 @@ sudo bash change_sni.sh
 
 **Выполните эту команду на сервере:**
 
-wget -O add_inbound.sh https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/add_inbound.sh
-
-sudo bash add_inbound.sh
+wget -O add_inbound.sh https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/add_inbound.sh && sudo bash add_inbound.sh
 
 Скрипт автоматически:
 
