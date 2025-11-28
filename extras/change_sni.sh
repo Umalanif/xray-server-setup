@@ -6,7 +6,6 @@ CONFIG_FILE="/usr/local/etc/xray/config.json"
 # Проверка: запущен ли скрипт от root
 if [ "$EUID" -ne 0 ]; then
   echo "❌ Ошибка: Запустите скрипт с правами суперпользователя (sudo)"
-  echo "Пример: sudo bash <(curl ...)"
   exit 1
 fi
 
@@ -54,6 +53,10 @@ jq --arg d "$DOMAIN:443" --arg n "$DOMAIN" \
    '.inbounds[0].streamSettings.realitySettings.dest = $d | .inbounds[0].streamSettings.realitySettings.serverNames = [$n]' \
    $CONFIG_FILE > "$tmp" && mv "$tmp" $CONFIG_FILE
 
+# === ИСПРАВЛЕНИЕ: Восстанавливаем права на чтение ===
+chmod 644 $CONFIG_FILE
+# ====================================================
+
 # Перезагрузка сервиса
 echo "🔄 Перезагрузка службы X-ray..."
 systemctl restart xray
@@ -65,6 +68,8 @@ if systemctl is-active --quiet xray; then
 else
     echo "❌ Ошибка! Сервис не запустился. Восстанавливаем бэкап..."
     mv "$CONFIG_FILE.bak" $CONFIG_FILE
+    # Восстанавливаем права и на бэкап, если пришлось откатываться
+    chmod 644 $CONFIG_FILE
     systemctl restart xray
     echo "Бэкап восстановлен. Проверьте логи."
 fi
