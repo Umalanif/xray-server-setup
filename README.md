@@ -165,8 +165,10 @@ sudo journalctl -u xray -f
 Если ваш провайдер блокирует соединение (или включил "белые списки"), попробуйте сменить маскировку трафика (SNI) на популярные российские сервисы.
 
 **Запустите эту команду на сервере:**
-sudo bash <(curl -Ls https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/change_sni.sh
-)
+
+<pre>
+sudo bash <(curl -Ls https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/change_sni.sh)
+</pre>
 
 Скрипт предложит выбрать домен (VK, Ozon, Wildberries и др.) и автоматически перенастроить сервер.
 
@@ -175,8 +177,11 @@ sudo bash <(curl -Ls https://raw.githubusercontent.com/Umalanif/xray-server-setu
 Если ваш оператор блокирует основной протокол (TCP/Vision), добавьте резервный канал через gRPC. Это помогает обойти жесткие фильтры мобильных сетей.
 
 **Выполните эту команду на сервере:**
-sudo bash <(curl -Ls https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/add_inbound.sh
-)
+
+<pre>
+sudo bash <(curl -Ls https://raw.githubusercontent.com/Umalanif/xray-server-setup/main/extras/add_inbound.sh)
+</pre>
+
 Скрипт автоматически:
 
 1. Откроет новый порт в Firewall.
